@@ -27,7 +27,7 @@ channel_id = 1009556444246446210
 channel = client.get_channel(channel_id)
 
 ADMIN_USER_ID = 409486429392207873
-JSON_DATA_PATH = "/Users/lucdreibholz/GitHub/BotiBot/2wnty1ne-Discord-Bot/data/data.json"
+JSON_DATA_PATH = "data/data.json"
 UP_ARROW_EMOJI = "⬆️"
 DOWN_ARROW_EMOJI = "⬇️"
 PLUS_EMOJI = "⏏️"

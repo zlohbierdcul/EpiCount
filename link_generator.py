@@ -1,7 +1,7 @@
 import discord
 import json
 
-JSON_DATA_PATH = "/Users/lucdreibholz/GitHub/BotiBot/2wnty1ne-Discord-Bot/data/data.json"
+JSON_DATA_PATH = "data/data.json"
 
 episodes_per_season = [ 61, 16, 15, 38, 13, 52, 33, 35, 73, 45, 26, 14, 35, 60, 57, 55, 118, 36, 107, 124, 16 ]
 

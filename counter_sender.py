@@ -4,7 +4,7 @@ from message_sender import send_message
 from chat_clearer import messageid
 
 
-JSON_DATA_PATH = "/Users/lucdreibholz/GitHub/BotiBot/2wnty1ne-Discord-Bot/data/data.json"
+JSON_DATA_PATH = "data/data.json"
 
 UP_ARROW_EMOJI = "⬆️"
 DOWN_ARROW_EMOJI = "⬇️"

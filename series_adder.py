@@ -1,7 +1,7 @@
 import discord
 import json
 
-JSON_DATA_PATH = "/Users/lucdreibholz/GitHub/BotiBot/2wnty1ne-Discord-Bot/data/data.json"
+JSON_DATA_PATH = "data/data.json"
 
 
 

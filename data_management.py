@@ -3,7 +3,7 @@ import json
 from counter_remover import remove_counter
 from chat_clearer import messageid
 
-JSON_DATA_PATH = "/Users/lucdreibholz/GitHub/BotiBot/2wnty1ne-Discord-Bot/data/data.json"
+JSON_DATA_PATH = "data/data.json"
 
 async def remove_entry(key, channel):
 
