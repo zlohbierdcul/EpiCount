@@ -4,6 +4,7 @@ from tabnanny import check
 import time
 import discord
 import json
+from filler_manager import check_if_filler
 
 import link_generator 
 import series_adder
@@ -51,7 +52,13 @@ async def on_ready():
 async def reload_message(key):
     awaited_channel = client.get_channel(channel_id)
     message_obj = await awaited_channel.fetch_message(messageid[key])
-    embeded_message = discord.Embed(title=data[key]["name"], description=f'Aktuelle Folge: Staffel {data[key]["season"]} Folge {data[key]["episode"]}', color=discord.Color.from_rgb(0,255,0))
+    filler_array = check_if_filler(data[key]['episode'])
+    is_filler = filler_array[0]
+    last_filler = filler_array[1]
+    epi_till_last = filler_array[2]
+    filler_message = f'Filler Folge! Ende: {last_filler}, noch {epi_till_last} Folgen!'
+    no_filler_message = 'Keine Filler Folge!'
+    embeded_message = discord.Embed(title=data[key]["name"], description=f'Aktuelle Folge: Staffel {data[key]["season"]} Folge {data[key]["episode"]} \n {filler_message if is_filler else no_filler_message}', color=discord.Color.from_rgb(0,255,0))
     await message_obj.edit(embed=embeded_message)
     await clear_chat(awaited_channel)
     with open(JSON_DATA_PATH, 'w') as g:
