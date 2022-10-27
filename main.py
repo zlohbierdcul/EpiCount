@@ -1,6 +1,9 @@
+import imp
+
+
+import os
 import datetime
-from email import message
-from tabnanny import check
+from dotenv import load_dotenv
 import time
 import discord
 import json
@@ -14,9 +17,10 @@ from chat_clearer import clear_chat, messageid
 from counter_remover import remove_counter
 from data_management import remove_entry
 
+load_dotenv()
 
 # discord bot token
-TOKEN = "MTAwOTYxMDgyNzIwMjA1NjI4Mw.GpYF7-.TeOU8Ok6Hjly-61wJf5oyNI0rWiNiOe5Owz0UI"
+TOKEN = os.getenv("TOKEN")
 
 
 #? Bot client configuration
