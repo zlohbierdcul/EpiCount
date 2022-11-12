@@ -1,6 +1,3 @@
-import imp
-
-
 import os
 import datetime
 from dotenv import load_dotenv
@@ -20,7 +17,7 @@ from data_management import remove_entry
 load_dotenv()
 
 # discord bot token
-TOKEN = os.getenv("TOKEN")
+TOKEN = os.getenv("DISCORD_TOKEN")
 
 
 #? Bot client configuration
@@ -146,8 +143,9 @@ async def handle_reaction(payload):
         data[key]["season"] = data[key]["season"] + 1
     if payload.emoji.name == LINK_EMOJI:
         current_season = data[key]["season"]
+        current_episode = data[key]["episode"]
         link_episode = link_generator.calculate_link_episode()
-        await send_message(channel=channel, title='Link to current Episode', description=f'https://burningseries.tw/serie/One-Piece/{current_season}/{link_episode}-Episode/de', color=discord.Color.from_rgb(0,250,250), reactions=[])
+        await send_message(channel=channel, title='Link to current Episode', description=f'https://onepiece-tube.com/folge/{current_episode}', color=discord.Color.from_rgb(0,250,250), reactions=[])
         await countdown(10)
 
     await reload_message(key)
