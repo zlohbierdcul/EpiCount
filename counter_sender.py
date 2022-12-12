@@ -16,11 +16,12 @@ LINK_EMOJI = "📟"
 
 async def send_counter(key, channel):
     EMOJI_ARRAY = [UP_ARROW_EMOJI, DOWN_ARROW_EMOJI, PLUS_EMOJI, LINK_EMOJI]
+    is_filler = False
 
     with open(JSON_DATA_PATH, 'r') as x:
         data = json.load(x)
 
-    if (key != 'onepiece'):
+    if (key != 'onepiece') or (key != 'norigami'):
         EMOJI_ARRAY.pop(3)
 
     if (key == 'onepiece'):

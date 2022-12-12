@@ -28,7 +28,7 @@ client = discord.Client(intents=intents, activity=discord.Game(name=f'prefix: {p
 channel_id = 1009556444246446210
 channel = client.get_channel(channel_id)
 
-ADMIN_USER_ID = 409486429392207873
+ADMIN_USER_ID = [409486429392207873]
 JSON_DATA_PATH = "data/data.json"
 UP_ARROW_EMOJI = "⬆️"
 DOWN_ARROW_EMOJI = "⬇️"
@@ -37,7 +37,7 @@ LINK_EMOJI = "📟"
 
 EMOJI_ARRAY = [UP_ARROW_EMOJI, DOWN_ARROW_EMOJI, PLUS_EMOJI, LINK_EMOJI]
 
-with open(JSON_DATA_PATH) as f:
+with open(JSON_DATA_PATH, "r") as f:
     data = json.load(f)
 
 
@@ -145,7 +145,10 @@ async def handle_reaction(payload):
         current_season = data[key]["season"]
         current_episode = data[key]["episode"]
         link_episode = link_generator.calculate_link_episode()
-        await send_message(channel=channel, title='Link to current Episode', description=f'https://onepiece-tube.com/folge/{current_episode}', color=discord.Color.from_rgb(0,250,250), reactions=[])
+        if (key == "onepiece"):
+            await send_message(channel=channel, title='Link to current Episode', description=f'https://onepiece-tube.com/folge/{current_episode}', color=discord.Color.from_rgb(0,250,250), reactions=[])
+        elif (key == "norigami"):
+            await send_message(channel=channel, title='Link to current Episode', description=f'https://aniflix.cc/show/noragami/ger-dub/season/{current_season}/episode/{current_episode}', color=discord.Color.from_rgb(0,250,250), reactions=[])
         await countdown(10)
 
     await reload_message(key)
@@ -173,7 +176,7 @@ async def on_raw_reaction_add(payload):
 
         print(key)
         def check_auth():
-            if payload.user_id in data[key]['auth_id'] or payload.user_id == ADMIN_USER_ID:
+            if payload.user_id in data[key]['auth_id'] or payload.user_id in ADMIN_USER_ID:
                 return True
             else:
                 return False
