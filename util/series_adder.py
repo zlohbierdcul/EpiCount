@@ -1,16 +1,8 @@
-import json
 
-JSON_DATA_PATH = "../data/data.json"
+from managers.file_manager import read_data, write_data
 
 
-def add_series(name, id):
-    with open(JSON_DATA_PATH, "r") as x:
-        data = json.load(x)
-
-    print(data)
-    data[name.lower()] = ({'name': name, 'auth_id': [id], 'episode': 1, 'season': 1})
-    print(data)
-    with open(JSON_DATA_PATH, 'w') as x:
-        json.dump(data, x)
-
-    print(data)
+def add_series(name, auth_id):
+    data = read_data()
+    data[name.lower()] = ({'name': name, 'auth_id': [auth_id], 'episode': 1, 'season': 1})
+    write_data(data)

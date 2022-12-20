@@ -1,12 +1,12 @@
 import discord
 
 
-async def send_message(channel, title, description, color, reactions=[]):
-    global messageid
-
+async def send_message(channel, title, description, color, reactions=None):
+    if reactions is None:
+        reactions = []
     embeded_message = discord.Embed(title=title, description=description, color=color)
-    nice_message = await channel.send(embed=embeded_message)
+    new_message = await channel.send(embed=embeded_message)
     for x in reactions:
-        await nice_message.add_reaction(x)
+        await new_message.add_reaction(x)
 
-    return nice_message
+    return new_message

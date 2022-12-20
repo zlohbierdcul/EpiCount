@@ -10,4 +10,4 @@ def read_data():
 
 def write_data(data):
     with open(JSON_DATA_PATH, "w") as x:
-        x = json.dump(data)
+        json.dump(data, x)
