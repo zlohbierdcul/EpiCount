@@ -1,5 +1,5 @@
 import discord
-import json
+
 from message_sender import send_message
 
 

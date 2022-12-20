@@ -1,26 +1,25 @@
-import os
 import datetime
-from dotenv import load_dotenv
-import time
-import discord
 import json
-from filler_manager import check_if_filler
+import os
+import time
 
-import link_generator 
-import series_adder
-import counter_sender
-from message_sender import send_message
-from chat_clearer import clear_chat, messageid
-from counter_remover import remove_counter
-from data_management import remove_entry
+import discord
+from dotenv import load_dotenv
+
+from message import counter_sender
+from util import link_generator, series_adder
+from message.chat_clearer import clear_chat
+from message.counter_remover import remove_counter
+from managers.data_management import remove_entry
+from managers.filler_manager import check_if_filler
+from message.message_sender import send_message
 
 load_dotenv()
 
 # discord bot token
 TOKEN = os.getenv("DISCORD_TOKEN")
 
-
-#? Bot client configuration
+# ? Bot client configuration
 intents = discord.Intents.all()
 prefix = "!"
 client = discord.Client(intents=intents, activity=discord.Game(name=f'prefix: {prefix}'))
@@ -41,7 +40,7 @@ with open(JSON_DATA_PATH, "r") as f:
     data = json.load(f)
 
 
-#? Gets executed when the bot starts
+# ? Gets executed when the bot starts
 @client.event
 async def on_ready():
     global messageid
@@ -49,6 +48,7 @@ async def on_ready():
     print(f"\n{client.user} is ready\nConnected to {len(guilds)} Server\n")
     channel = client.get_channel(channel_id)
     await clear_chat(channel)
+
 
 async def reload_message(key):
     awaited_channel = client.get_channel(channel_id)
@@ -59,41 +59,45 @@ async def reload_message(key):
     epi_till_last = filler_array[2]
     filler_message = f'Filler Folge! Ende: {last_filler}, noch {epi_till_last} Folgen!'
     no_filler_message = 'Keine Filler Folge!'
-    embeded_message = discord.Embed(title=data[key]["name"], description=f'Aktuelle Folge: Staffel {data[key]["season"]} Folge {data[key]["episode"]} \n {filler_message if is_filler else no_filler_message}', color=discord.Color.from_rgb(0,255,0))
+    embeded_message = discord.Embed(title=data[key]["name"],
+                                    description=f'Aktuelle Folge: Staffel {data[key]["season"]} Folge {data[key]["episode"]} \n {filler_message if is_filler else no_filler_message}',
+                                    color=discord.Color.from_rgb(0, 255, 0))
     await message_obj.edit(embed=embeded_message)
     await clear_chat(awaited_channel)
     with open(JSON_DATA_PATH, 'w') as g:
         json.dump(data, g)
 
+
 def commands_to_lower(command_list):
-    commandlist_lower = []
+    command_list_lower = []
     for x in range(len(command_list)):
-        commandlist_lower.append(command_list[x].lower())
-    return commandlist_lower
+        command_list_lower.append(command_list[x].lower())
+    return command_list_lower
+
 
 async def countdown(s):
     no_message = False
- 
+
     # Calculate the total number of seconds
     total_seconds = s
- 
+
     # While loop that checks if total_seconds reaches zero
     # If not zero, decrement total time by one second
     while total_seconds > 0:
- 
         # Timer represents time left on countdown
-        timer = datetime.timedelta(seconds = total_seconds)
-        
+        timer = datetime.timedelta(seconds=total_seconds)
+
         # Prints the time left on the timer
         print(timer, end="\r")
- 
+
         # Delays the program one second
         time.sleep(1)
- 
+
         # Reduces total time by one second
         total_seconds -= 1
- 
+
     await clear_chat(client.get_channel(channel_id))
+
 
 def format_time(minutes):
     hours_total = minutes // 60
@@ -103,11 +107,13 @@ def format_time(minutes):
     time_string = "{} hours {} minutes".format(hours_total, minutes_total)
     return time_string
 
+
 async def set_episode(key, num):
     data[key]["episode"] = int(num)
     with open(JSON_DATA_PATH, 'w') as g:
         json.dump(data, g)
     await reload_message(key)
+
 
 async def set_season(key, num):
     data[key]["season"] = int(num)
@@ -115,19 +121,21 @@ async def set_season(key, num):
         json.dump(data, g)
     await reload_message(key)
 
+
 async def calculate_watchtime(channel):
     watchtime = data["onepiece"]["episode"] * 20
     watchtime_hours = format_time(watchtime)
-    embeded_message = discord.Embed(title="Watchtime", description=f'{watchtime} min or {watchtime_hours}\nhave been watched!', color=discord.Color.from_rgb(0,0,255))
-    nice_message = await channel.send(embed = embeded_message)
+    embeded_message = discord.Embed(title="Watchtime",
+                                    description=f'{watchtime} min or {watchtime_hours}\nhave been watched!',
+                                    color=discord.Color.from_rgb(0, 0, 255))
+    nice_message = await channel.send(embed=embeded_message)
+    await countdown(10)
+
 
 def get_key(message_id):
-    
     for x in messageid:
         if message_id == messageid[x]:
             return x
-        
-        
 
 
 async def handle_reaction(payload):
@@ -145,17 +153,20 @@ async def handle_reaction(payload):
         current_season = data[key]["season"]
         current_episode = data[key]["episode"]
         link_episode = link_generator.calculate_link_episode()
-        if (key == "onepiece"):
-            await send_message(channel=channel, title='Link to current Episode', description=f'https://onepiece-tube.com/folge/{current_episode}', color=discord.Color.from_rgb(0,250,250), reactions=[])
-        elif (key == "norigami"):
-            await send_message(channel=channel, title='Link to current Episode', description=f'https://aniflix.cc/show/noragami/ger-dub/season/{current_season}/episode/{current_episode}', color=discord.Color.from_rgb(0,250,250), reactions=[])
+        if key == "onepiece":
+            await send_message(channel=channel, title='Link to current Episode',
+                               description=f'https://onepiece-tube.com/folge/{current_episode}',
+                               color=discord.Color.from_rgb(0, 250, 250), reactions=[])
+        elif key == "norigami":
+            await send_message(channel=channel, title='Link to current Episode',
+                               description=f'https://aniflix.cc/show/noragami/ger-dub/season/{current_season}/episode/{current_episode}',
+                               color=discord.Color.from_rgb(0, 250, 250), reactions=[])
         await countdown(10)
 
     await reload_message(key)
 
     # embeded_message = discord.Embed(title=data[id]["name"], description=f'Aktuelle Folge: Staffel {data[id]["season"]} Folge {data[id]["episode"]}', color=discord.Color.from_rgb(0,255,0))
     # await message_obj.edit(embed=embeded_message)
-    
 
     with open(JSON_DATA_PATH, 'w') as g:
         json.dump(data, g)
@@ -175,6 +186,7 @@ async def on_raw_reaction_add(payload):
         await message_obj.remove_reaction(payload.emoji.name, user_obj)
 
         print(key)
+
         def check_auth():
             if payload.user_id in data[key]['auth_id'] or payload.user_id in ADMIN_USER_ID:
                 return True
@@ -193,18 +205,17 @@ async def on_raw_reaction_add(payload):
         if (payload.channel_id == channel_id) and (admin_or_link) and not (payload.user_id == client.user.id):
             await handle_reaction(payload)
         elif not payload.user_id == client.user.id:
-            embeded_message = discord.Embed(title="Error", description=f'You´re not authorized to do that!', color=discord.Color.from_rgb(255,0,0))
+            embeded_message = discord.Embed(title="Error", description=f'You´re not authorized to do that!',
+                                            color=discord.Color.from_rgb(255, 0, 0))
             awaited_channel = client.get_channel(payload.channel_id)
-            nice_message = await awaited_channel.send(embed = embeded_message)
+            nice_message = await awaited_channel.send(embed=embeded_message)
             await countdown(2)
-        
-
 
     with open(JSON_DATA_PATH, 'w') as h:
         json.dump(data, h)
 
-    
-@client.event 
+
+@client.event
 async def on_message(message):
     guild = message.guild
     messager_id = message.author.id
@@ -238,20 +249,11 @@ async def on_message(message):
         await clear_chat(channel)
     if command == f'{prefix}watchtime':
         await calculate_watchtime(channel)
-        await countdown(10)
-    if command == f'{prefix}link':
-        current_season = data["onepiece"]["season"]
-        link_episode = link_generator.calculate_link_episode()
-        await send_message(channel=channel, title='Link to current Episode', description=f'https://burningseries.tw/serie/One-Piece/{current_season}/{link_episode}-Episode/de', color=discord.Color.from_rgb(0,250,250), reactions=[])
-        await countdown(10)
     else:
         await countdown(2)
 
     with open(JSON_DATA_PATH, 'r') as x:
         data = json.load(x)
-        
-    
-
 
 
 client.run(TOKEN)
