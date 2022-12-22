@@ -1,3 +1,5 @@
+from typing import re
+
 from managers.file_manager import read_data
 
 episodes_per_season = [61, 16, 15, 38, 13, 52, 33, 35, 73, 45, 26, 14, 35, 60, 57, 55, 118, 36, 107, 124, 16]
@@ -11,8 +13,13 @@ def get_link(key):
     print(link)
     formatted_link = link.format(episode=str(data[key]["episode"]), season=str(data[key]["season"]))
     try:
-        link.replace("{episode}", str(data[key]["episode"]))
+        match = re.search(r"{episode([+|-])(\d+)}", link)
+        operator = match.group(1)
+        value = match.group(2)
+        episode = eval(str(data[key]["episode"]) + operator + value)
+        link.replace("{episode}", str(episode))
     except Exception:
+        link.replace("{episode}", str(data[key]["episode"]))
         print("Cannot replace episode!")
     try:
         link.replace("{season}", str(data[key]["season"]))
