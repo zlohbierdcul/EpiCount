@@ -1,4 +1,4 @@
-from typing import re
+import re
 
 from managers.file_manager import read_data
 
@@ -11,22 +11,20 @@ def get_link(key):
     link = data[key]["link"]
 
     print(link)
-    formatted_link = link.format(episode=str(data[key]["episode"]), season=str(data[key]["season"]))
+    #formatted_link = link.format(episode=str(data[key]["episode"]), season=str(data[key]["season"]))
     try:
         match = re.search(r"{episode([+|-])(\d+)}", link)
         operator = match.group(1)
         value = match.group(2)
         episode = eval(str(data[key]["episode"]) + operator + value)
-        link.replace("{episode}", str(episode))
+        link = link.replace(f"{{episode{operator}{value}}}", str(episode))
     except Exception:
-        link.replace("{episode}", str(data[key]["episode"]))
-        print("Cannot replace episode!")
+        link = link.replace("{episode}", str(data[key]["episode"]))
     try:
         link.replace("{season}", str(data[key]["season"]))
     except Exception:
         print("Cannot replace season!")
-    print(formatted_link)
-    return formatted_link
+    return link
 
 
 def calculate_link_episode(key):
