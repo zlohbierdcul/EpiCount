@@ -5,7 +5,21 @@ episodes_per_season = [61, 16, 15, 38, 13, 52, 33, 35, 73, 45, 26, 14, 35, 60, 5
 
 def get_link(key):
     # TODO implement method
-    pass
+    data = read_data()
+    link = data[key]["link"]
+
+    print(link)
+    formatted_link = link.format(episode=str(data[key]["episode"]), season=str(data[key]["season"]))
+    try:
+        link.replace("{episode}", str(data[key]["episode"]))
+    except Exception:
+        print("Cannot replace episode!")
+    try:
+        link.replace("{season}", str(data[key]["season"]))
+    except Exception:
+        print("Cannot replace season!")
+    print(formatted_link)
+    return formatted_link
 
 
 def calculate_link_episode(key):

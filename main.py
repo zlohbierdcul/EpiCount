@@ -1,15 +1,19 @@
+import asyncio
 import os
 import discord
 from dotenv import load_dotenv
 
 from managers.file_manager import read_data, write_data
 from message import counter_sender
+from message.counter_sender import create_counter_embeded
+from message.send_error import send_error
 from util import link_generator, series_adder
 from message.chat_clearer import clear_chat, messageid, countdown
 from message.counter_remover import remove_counter
 from managers.data_management import remove_entry
 from managers.filler_manager import check_if_filler
-from message.message_sender import send_message
+from message.message_sender import send_message, create_embeded
+from util.link_generator import get_link
 
 load_dotenv()
 
@@ -21,11 +25,10 @@ intents = discord.Intents.all()
 prefix = "!"
 client = discord.Client(intents=intents, activity=discord.Game(name=f'prefix: {prefix}'))
 
-channel_id = 1009556444246446210
-channel = client.get_channel(channel_id)
+channel_id = 1055253364759351336
 
 ADMIN_USER_ID = [409486429392207873]
-JSON_DATA_PATH = "data/data.json"
+
 UP_ARROW_EMOJI = "⬆️"
 DOWN_ARROW_EMOJI = "⬇️"
 PLUS_EMOJI = "⏏️"
@@ -37,28 +40,17 @@ EMOJI_ARRAY = [UP_ARROW_EMOJI, DOWN_ARROW_EMOJI, PLUS_EMOJI, LINK_EMOJI]
 # ? Gets executed when the bot starts
 @client.event
 async def on_ready():
+    channel = client.get_channel(channel_id)
     guilds = client.guilds
     print(f"\n{client.user} is ready\nConnected to {len(guilds)} Server\n")
-    on_ready_channel = client.get_channel(channel_id)
-    await clear_chat(on_ready_channel)
+    await clear_chat(channel)
 
 
 async def reload_message(key):
-    # TODO rewrite method
-    data = read_data()
-    awaited_channel = client.get_channel(channel_id)
-    message_obj = await awaited_channel.fetch_message(messageid[key])
-    filler_array = check_if_filler(data[key]['episode'], key)
-    is_filler = filler_array[0]
-    last_filler = filler_array[1]
-    epi_till_last = filler_array[2]
-    filler_message = f'Filler Folge! Ende: {last_filler}, noch {epi_till_last} Folgen!'
-    no_filler_message = 'Keine Filler Folge!'
-    embeded_message = discord.Embed(title=data[key]["name"],
-                                    description=f'Aktuelle Folge: Staffel {data[key]["season"]} Folge {data[key]["episode"]} \n {filler_message if is_filler else no_filler_message}',
-                                    color=discord.Color.from_rgb(0, 255, 0))
-    await message_obj.edit(embed=embeded_message)
-    await clear_chat(awaited_channel)
+    channel = client.get_channel(channel_id)
+    message_obj = await channel.fetch_message(messageid[key])
+    await message_obj.edit(embed=create_counter_embeded(key))
+    await clear_chat(channel)
 
 
 def commands_to_lower(command_list):
@@ -78,28 +70,38 @@ def format_time(minutes):
 
 
 async def set_episode(key, num):
+    channel = client.get_channel(channel_id)
     data = read_data()
-    data[key]["episode"] = int(num)
+    try:
+        data[key]["episode"] = int(num)
+    except Exception:
+        await send_error("The series does not exist!", "Please enter a valid series!", channel)
     write_data(data)
     await reload_message(key)
 
 
 async def set_season(key, num):
+    channel = client.get_channel(channel_id)
     data = read_data()
-    data[key]["season"] = int(num)
+    try:
+        data[key]["season"] = int(num)
+    except Exception:
+        await send_error("The series does not exist!", "Please enter a valid series!", channel)
     write_data(data)
     await reload_message(key)
 
 
 async def calculate_watchtime(watchtime_channel):
+    channel = client.get_channel(channel_id)
     data = read_data()
     watchtime = data["onepiece"]["episode"] * 20
     watchtime_hours = format_time(watchtime)
     embeded_message = discord.Embed(title="Watchtime",
                                     description=f'{watchtime} min or {watchtime_hours}\nhave been watched!',
                                     color=discord.Color.from_rgb(0, 0, 255))
-    await watchtime_channel.send(embed=embeded_message)
-    await countdown(10)
+    message = await watchtime_channel.send(embed=embeded_message)
+    await asyncio.sleep(10)
+    await message.delete()
 
 
 def get_key(message_id):
@@ -109,10 +111,8 @@ def get_key(message_id):
 
 
 async def handle_reaction(payload):
+    channel = client.get_channel(channel_id)
     data = read_data()
-
-    reaction_channel = client.get_channel(channel_id)
-
     key = get_key(payload.message_id)
 
     if payload.emoji.name == UP_ARROW_EMOJI:
@@ -126,26 +126,27 @@ async def handle_reaction(payload):
     await reload_message(key)
 
     if payload.emoji.name == LINK_EMOJI:
-        await send_message(channel=reaction_channel, title='Link to current Episode',
-                           description=link_generator.get_link(key),
-                           color=discord.Color.from_rgb(0, 250, 250), reactions=[])
-        await countdown(10)
+        embeded = create_embeded(f'Link to {data[key]["name"]}',
+                                 "",
+                                 discord.Color.from_rgb(0, 0, 255))
+        embeded.url = get_link(key)
+        message = await send_message(channel,
+                                     embeded)
+        await asyncio.sleep(10)
+        await message.delete()
 
 
 @client.event
 async def on_raw_reaction_add(payload):
-    global channel_id
-    add_reaction_channel = client.get_channel(channel_id)
+    channel = client.get_channel(channel_id)
 
     if not payload.user_id == client.user.id:
         print(f'messageids: {messageid}')
         key = get_key(payload.message_id)
 
-        message_obj = await add_reaction_channel.fetch_message(payload.message_id)
+        message_obj = await channel.fetch_message(payload.message_id)
         user_obj = client.get_user(payload.user_id)
         await message_obj.remove_reaction(payload.emoji.name, user_obj)
-
-        print(key)
 
         def check_auth():
             data = read_data()
@@ -155,52 +156,51 @@ async def on_raw_reaction_add(payload):
                 return False
 
         admin_or_link = check_auth() or (payload.emoji.name == LINK_EMOJI)
-
         if (payload.channel_id == channel_id) and admin_or_link and not (payload.user_id == client.user.id):
             await handle_reaction(payload)
         elif not payload.user_id == client.user.id:
-            embeded_message = discord.Embed(title="Error", description=f'You´re not authorized to do that!',
-                                            color=discord.Color.from_rgb(255, 0, 0))
             awaited_channel = client.get_channel(payload.channel_id)
-            await awaited_channel.send(embed=embeded_message)
-            await countdown(2)
+            message = await send_error("You´re not authorized to do that!", "Fuck off now!", awaited_channel)
+            await asyncio.sleep(2)
+            await message.delete()
 
 
 @client.event
 async def on_message(message):
+    print(messageid)
     messager_id = message.author.id
-    message_channel = client.get_channel(channel_id)
+    channel = client.get_channel(channel_id)
 
-    if messager_id == client.user.id:
+    if messager_id == client.user.id or message.content is None:
         return None
 
+    await message.delete()
     command_message = message.content
-    print(command_message)
     command_list = command_message.split()
     command = command_list.pop(0)
     command_args = command_list
 
     if command == f'{prefix}rmseries':
-        await remove_entry(command_args[0].lower(), message_channel)
+        await remove_entry(command_args[0].lower(), channel)
     if command == f'{prefix}counter':
-        await clear_chat(message_channel)
-        await counter_sender.send_counter(command_args[0].lower(), message_channel)
+        # await clear_chat(channel)
+        await counter_sender.send_counter(channel, command_args[0].lower())
     if command == f'{prefix}rmcounter':
-        await remove_counter(command_args[0].lower(), message_channel)
-        await clear_chat(message_channel)
+        await remove_counter(command_args[0].lower(), channel)
+        await clear_chat(channel)
     if command == f'{prefix}add':
-        series_adder.add_series(command_args[0], messager_id)
-        await counter_sender.send_counter(command_args[0].lower(), message_channel)
+        await series_adder.add(channel, command_args[0], messager_id, client)
     if command == f'{prefix}setep':
         await set_episode(command_args[0].lower(), command_args[1])
     if command == f'{prefix}setse':
         await set_season(command_args[0].lower(), command_args[1])
     if command == f'{prefix}clear':
-        await clear_chat(message_channel)
+        await clear_chat(channel)
     if command == f'{prefix}watchtime':
-        await calculate_watchtime(message_channel)
+        # TODO change watchtime method
+        await calculate_watchtime(channel)
     else:
-        await countdown(2)
+        pass
 
 
 client.run(TOKEN)

@@ -1,8 +1,6 @@
 import datetime
 import time
 
-from main import channel_id, client
-
 messageid = {}
 
 
@@ -20,7 +18,7 @@ async def clear_chat(channel):
     await channel.purge(check=is_main_msg)
 
 
-async def countdown(s):
+async def countdown(s, channel):
     no_message = False
 
     # Calculate the total number of seconds
@@ -41,4 +39,4 @@ async def countdown(s):
         # Reduces total time by one second
         total_seconds -= 1
 
-    await clear_chat(client.get_channel(channel_id))
+    await clear_chat(channel)
