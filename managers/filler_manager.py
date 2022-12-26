@@ -2,7 +2,7 @@ from managers.file_manager import read_data
 
 
 def check_if_filler(current_episode, key):
-    data = read_data()
+    data = read_data('data/data.json')
     is_filler = False
     last_filler = 0
     episodes_till_last_filler = 0

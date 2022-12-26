@@ -7,7 +7,7 @@ episodes_per_season = [61, 16, 15, 38, 13, 52, 33, 35, 73, 45, 26, 14, 35, 60, 5
 
 def get_link(key):
     # TODO implement method
-    data = read_data()
+    data = read_data('data/data.json')
     link = data[key]["link"]
 
     print(link)
@@ -28,7 +28,7 @@ def get_link(key):
 
 
 def calculate_link_episode(key):
-    data = read_data()
+    data = read_data('data/data.json')
     current_episode = data[key]["episode"]
     episodes_till_season = calculate_episodes_till_season(data, key)
 

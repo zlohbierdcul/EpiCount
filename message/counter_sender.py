@@ -16,7 +16,7 @@ EMOJI_ARRAY = [UP_ARROW_EMOJI, DOWN_ARROW_EMOJI, PLUS_EMOJI, LINK_EMOJI]
 
 
 def create_counter_embeded(key):
-    data = read_data()
+    data = read_data('data/data.json')
 
     if has_filler(key):
         filler_array = check_if_filler(data[key]['episode'], key)
